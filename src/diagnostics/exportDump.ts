@@ -34,7 +34,7 @@ export function buildBundle(state: SessionState, meta: ExportMeta) {
     turns: state.turns,
     events: state.events,
     dataChannel: state.dc,
-    peerConnections: Object.values(state.pcs).map(({ reports: _reports, ...pc }) => pc),
+    peerConnections: Object.values(state.pcs).map((pc) => ({ ...pc, reports: undefined })), // raw reports live in the internals dump
   });
 }
 

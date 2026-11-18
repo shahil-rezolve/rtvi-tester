@@ -119,3 +119,16 @@
     }
   }
 }
+
+/* JSON tree colours */
+.jt { background: transparent; }
+.jt-label { color: var(--text); margin-right: 4px; }
+.jt-string { color: var(--user); word-break: break-all; }
+.jt-number { color: var(--bot); }
+.jt-bool { color: var(--warn); }
+.jt-null { color: var(--text-dim); }
+.jt-punct { color: var(--text-dim); }
+
+/* uPlot legend/axes follow theme */
+.uplot { font-family: var(--font-mono); }
+.u-legend { font-size: 11px; color: var(--text-dim); }

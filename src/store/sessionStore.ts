@@ -37,6 +37,7 @@ export type Selection =
   | { kind: "pclog"; value: PcLogEntry }
   | { kind: "turn"; value: Turn }
   | { kind: "stat"; value: RawStat }
+  | { kind: "response"; value: unknown }
   | null;
 
 export interface SessionState {

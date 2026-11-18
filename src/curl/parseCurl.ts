@@ -5,6 +5,15 @@ export interface CurlRequest {
   body?: string;
 }
 
+/** What the /__proxy dev middleware (vite/curlProxy.ts) returns. */
+export interface ProxyResponse {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: string;
+  durationMs: number;
+}
+
 /** Split a shell command into words: handles '…', "…" (with \ escapes) and bare words. */
 function tokenize(cmd: string): string[] {
   const tokens: string[] = [];
