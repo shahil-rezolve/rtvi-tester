@@ -9,7 +9,7 @@ import { fmtDuration, levelOf, levelText } from "@/lib/format";
 import { useNow } from "@/lib/useNow";
 import { cn } from "@/lib/utils";
 import { usePrefs } from "@/store/prefsStore";
-import { sessionStore, useSession } from "@/store/sessionStore";
+import { pickPc, sessionStore, useSession } from "@/store/sessionStore";
 import type { StatsSample } from "@/diagnostics/stats";
 
 const STATE_TONE: Partial<Record<TransportState, string>> = { connected: "bg-ok", ready: "bg-ok", error: "bg-bad", disconnected: "bg-dim" };
@@ -21,13 +21,9 @@ function useConnectedSince(): number | undefined {
   return since;
 }
 
-/** Latest sample from the subscriber PC (it carries the bot's inbound audio), else from any PC. */
+/** Latest sample from the current subscriber PC (it carries the bot's inbound audio), else from any PC. */
 function useLatestSample(): StatsSample | undefined {
-  return useSession((s) => {
-    const pcs = Object.values(s.pcs);
-    const pick = pcs.find((p) => p.role === "subscriber" && p.samples.length) ?? pcs.find((p) => p.samples.length);
-    return pick?.samples.at(-1);
-  });
+  return useSession((s) => (pickPc(s.pcs, "subscriber") ?? pickPc(s.pcs))?.samples.at(-1));
 }
 
 function Chip({ label, value, unit, warn, bad }: { label: string; value?: number; unit: string; warn: number; bad: number }) {

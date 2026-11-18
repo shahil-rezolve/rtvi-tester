@@ -24,6 +24,7 @@ export interface PcState {
   id: string;
   role: PcRole;
   createdAt: number;
+  closed: boolean;
   config?: RTCConfiguration;
   log: PcLogEntry[];
   samples: StatsSample[];
@@ -68,6 +69,12 @@ export function pushCapped<T>(arr: T[], item: T, cap: number): T[] {
   return arr.length >= cap ? [...arr.slice(arr.length - cap + 1), item] : [...arr, item];
 }
 
+/** Newest live PC (optionally of a role); falls back to the newest one at all. Reconnects create new PCs. */
+export function pickPc(pcs: Record<string, PcState>, role?: PcRole): PcState | undefined {
+  const list = Object.values(pcs).filter((p) => !role || p.role === role);
+  return list.findLast((p) => !p.closed) ?? list.at(-1);
+}
+
 let nextId = 0;
 
 export function createSessionStore() {
@@ -92,9 +99,13 @@ export function createSessionStore() {
         set((s) => ({ events: pushCapped(s.events, { id: ++nextId, t: Date.now(), name, dir, args }, LOG_CAP) })),
       addDc: (m) => set((s) => ({ dc: pushCapped(s.dc, { ...m, id: ++nextId }, LOG_CAP) })),
       pcCreated: (id, config) =>
-        set((s) => ({ pcs: { ...s.pcs, [id]: { id, role: "unknown", createdAt: Date.now(), config, log: [], samples: [], reports: [] } } })),
+        set((s) => ({ pcs: { ...s.pcs, [id]: { id, role: "unknown", createdAt: Date.now(), closed: false, config, log: [], samples: [], reports: [] } } })),
       setPcRole: (id, role) => updatePc(id, () => ({ role })),
-      addPcLog: (e) => updatePc(e.pcId, (pc) => ({ log: pushCapped(pc.log, e, LOG_CAP) })),
+      addPcLog: (e) =>
+        updatePc(e.pcId, (pc) => ({
+          log: pushCapped(pc.log, e, LOG_CAP),
+          closed: pc.closed || e.type === "close" || (e.type === "connectionstatechange" && e.value === "closed"),
+        })),
       addStats: (pcId, report, sample) =>
         updatePc(pcId, (pc) => ({
           samples: pushCapped(pc.samples, sample, SAMPLE_CAP),

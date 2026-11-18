@@ -2,6 +2,7 @@
 import type { SessionState } from "@/store/sessionStore";
 
 const SECRET_KEYS = /^(token|credential|password|authorization)$/i;
+const JWT = /^eyJ[\w-]+\.[\w-]+\.[\w-]+$/; // LiveKit tokens are JWTs; catch them under any key
 
 export function redactToken(token?: string): string | undefined {
   return token === undefined ? undefined : `…${token.slice(-6)}`;
@@ -15,7 +16,7 @@ function redactDeep(v: unknown): unknown {
       Object.entries(v).map(([k, val]) => [k, SECRET_KEYS.test(k) && typeof val === "string" ? redactToken(val) : redactDeep(val)]),
     );
   }
-  return v;
+  return typeof v === "string" && JWT.test(v) ? redactToken(v) : v;
 }
 
 export interface ExportMeta {

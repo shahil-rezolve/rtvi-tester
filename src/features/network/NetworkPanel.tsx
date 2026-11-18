@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { UPlotChart } from "@/components/UPlotChart";
 import { Chip } from "@/components/FilterBar";
-import { useSession } from "@/store/sessionStore";
+import { pickPc, useSession } from "@/store/sessionStore";
 
 function Fact({ label, value }: { label: string; value?: string }) {
   return (
@@ -18,7 +18,7 @@ export function NetworkPanel() {
   const pcs = useSession((s) => s.pcs);
   const list = Object.values(pcs);
   const [chosen, setChosen] = useState<string>();
-  const pc = (chosen && pcs[chosen]) || list.find((p) => p.role === "subscriber") || list[0];
+  const pc = (chosen && pcs[chosen]) || pickPc(pcs, "subscriber") || pickPc(pcs);
 
   if (!pc) return <p className="p-6 text-xs text-dim">Network stats appear once a peer connection exists. Connect to a room first.</p>;
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { proxyRequest } from "./curlProxy";
+import { isAllowedProxyRequest, proxyRequest } from "./curlProxy";
 
 describe("proxyRequest", () => {
   it("rejects non-http URLs", async () => {
@@ -20,5 +20,18 @@ describe("proxyRequest", () => {
     const fetchImpl = vi.fn(async () => new Response(""));
     await proxyRequest({ url: "https://api.test", method: "GET", headers: {}, body: "x" }, fetchImpl);
     expect(fetchImpl).toHaveBeenCalledWith("https://api.test", expect.objectContaining({ body: undefined }));
+  });
+});
+
+describe("isAllowedProxyRequest", () => {
+  it("accepts the tester's own JSON request", () => {
+    expect(isAllowedProxyRequest({ "content-type": "application/json", "sec-fetch-site": "same-origin" })).toBe(true);
+  });
+  it("rejects simple cross-site requests that skip CORS preflight", () => {
+    expect(isAllowedProxyRequest({ "content-type": "text/plain;charset=UTF-8" })).toBe(false);
+    expect(isAllowedProxyRequest({})).toBe(false);
+  });
+  it("rejects JSON requests from another site", () => {
+    expect(isAllowedProxyRequest({ "content-type": "application/json", "sec-fetch-site": "cross-site" })).toBe(false);
   });
 });

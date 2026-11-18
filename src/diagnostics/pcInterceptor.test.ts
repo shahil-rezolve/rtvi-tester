@@ -104,6 +104,16 @@ describe("installPcInterceptor", () => {
     expect(s.logs.at(-1)).toMatchObject({ type: "connectionstatechange", value: "connected" });
   });
 
+  it("still sends when the tap itself throws", () => {
+    const pc = new target.RTCPeerConnection();
+    const dc = pc.createDataChannel("_reliable");
+    const buf = new ArrayBuffer(4);
+    const view = new Uint8Array(buf);
+    structuredClone(buf, { transfer: [buf] }); // detach: copying the view now throws
+    expect(() => dc.send(view)).not.toThrow();
+    expect(dc.sent).toEqual([view]);
+  });
+
   it("restores the original constructor on uninstall", () => {
     uninstall();
     expect(target.RTCPeerConnection).toBe(FakePC);

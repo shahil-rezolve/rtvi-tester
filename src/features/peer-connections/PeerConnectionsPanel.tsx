@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fmtRel, preview } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { PcLogEntry } from "@/diagnostics/pcInterceptor";
-import { sessionStore, useSession, type PcState, type RawStat } from "@/store/sessionStore";
+import { pickPc, sessionStore, useSession, type PcState, type RawStat } from "@/store/sessionStore";
 
 const STATE_EVENTS = ["connectionstatechange", "iceconnectionstatechange"];
 
@@ -91,7 +91,7 @@ export function PeerConnectionsPanel() {
   const pcs = useSession((s) => s.pcs);
   const list = Object.values(pcs);
   const [chosen, setChosen] = useState<string>();
-  const pc = (chosen && pcs[chosen]) || list[0];
+  const pc = (chosen && pcs[chosen]) || pickPc(pcs);
 
   if (!pc) return <p className="p-6 text-xs text-dim">No peer connections yet. LiveKit opens a publisher and a subscriber connection when you connect.</p>;
 

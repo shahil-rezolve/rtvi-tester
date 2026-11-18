@@ -80,7 +80,7 @@ function tapDataChannel(dc: RTCDataChannel, pcId: string, sink: PcSink) {
   }
   const originalSend = dc.send.bind(dc) as (d: DataLike) => void;
   (dc as { send: (d: DataLike) => void }).send = (data: DataLike) => {
-    emitMessage(sink, pcId, label, "out", data);
+    safe(() => emitMessage(sink, pcId, label, "out", data));
     return originalSend(data);
   };
 }

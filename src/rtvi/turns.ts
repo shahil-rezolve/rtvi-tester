@@ -39,6 +39,13 @@ function updateLast(turns: Turn[], patch: (t: Turn) => Partial<Turn>): Turn[] {
   return [...turns.slice(0, -1), { ...last, ...patch(last) }];
 }
 
+/** The user started this turn while the previous turn's bot was still talking. */
+function isBargeIn(turns: Turn[]): boolean {
+  const [prev, last] = [turns.at(-2), turns.at(-1)];
+  if (!prev || prev.botStart === undefined || last?.userStart === undefined) return false;
+  return prev.botStop === undefined || prev.botStop > last.userStart;
+}
+
 export function turnReducer(turns: Turn[], input: TurnInput): Turn[] {
   const last = turns.at(-1);
   switch (input.type) {
@@ -59,10 +66,18 @@ export function turnReducer(turns: Turn[], input: TurnInput): Turn[] {
       return newTurn(turns, { source: "text", textSentAt: input.t, userText: input.text });
     case "botStartedSpeaking":
       if (!last) return newTurn(turns, { source: "bot", botStart: input.t });
+      // The wrapper emits bot-speaking from several sources; during a barge-in a late one for the bot's audio
+      // tail would land on the new turn before the user finishes. It belongs to the interrupted turn.
+      if (last.userStop === undefined && last.botStart === undefined && isBargeIn(turns)) return turns;
       // First bot span sets botStart; later spans in the same turn just reopen it.
       return updateLast(turns, (l) => ({ botStart: l.botStart ?? input.t, botStop: undefined }));
     case "botStoppedSpeaking":
-      return last ? updateLast(turns, () => ({ botStop: input.t })) : turns;
+      if (!last) return turns;
+      if (last.botStart === undefined && isBargeIn(turns)) {
+        // Bot was cut off: close the interrupted turn's span.
+        return [...turns.slice(0, -2), { ...turns.at(-2)!, botStop: input.t }, last];
+      }
+      return updateLast(turns, () => ({ botStop: input.t }));
     case "botTtsText":
       if (!last) return newTurn(turns, { source: "bot", botText: input.text });
       return updateLast(turns, (l) => ({ botText: join(l.botText, input.text) }));
@@ -79,7 +94,7 @@ export function turnReducer(turns: Turn[], input: TurnInput): Turn[] {
 
 export function turnLatencyMs(turn: Turn): number | undefined {
   const from = turn.userStop ?? turn.textSentAt;
-  if (from === undefined || turn.botStart === undefined) return undefined;
+  if (from === undefined || turn.botStart === undefined || turn.botStart < from) return undefined;
   return turn.botStart - from;
 }
 

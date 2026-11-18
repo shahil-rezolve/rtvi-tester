@@ -76,6 +76,27 @@ describe("turnReducer", () => {
   });
 });
 
+describe("barge-in", () => {
+  it("ignores a stale bot-started while the user is still speaking", () => {
+    const turns = run([
+      { type: "userStartedSpeaking", t: 0 },
+      { type: "userStoppedSpeaking", t: 1000 },
+      { type: "botStartedSpeaking", t: 1800 },
+      { type: "userStartedSpeaking", t: 3000 }, // barge-in
+      { type: "botStartedSpeaking", t: 3100 }, // late active-speaker event for the bot's audio tail
+      { type: "botStoppedSpeaking", t: 3200 }, // bot cut off: belongs to the interrupted turn
+      { type: "userStoppedSpeaking", t: 4000 },
+      { type: "botStartedSpeaking", t: 4700 },
+    ]);
+    expect(turns).toHaveLength(2);
+    expect(turns[0].botStop).toBe(3200);
+    expect(turnLatencyMs(turns[1])).toBe(700);
+  });
+  it("never reports a negative latency", () => {
+    expect(turnLatencyMs({ id: 1, source: "voice", userStop: 1000, botStart: 900, userText: "", botText: "", metrics: [] })).toBeUndefined();
+  });
+});
+
 describe("percentile", () => {
   it("interpolates linearly", () => expect(percentile([100, 200, 300, 400], 50)).toBe(250));
   it("returns undefined for no values", () => expect(percentile([], 95)).toBeUndefined());

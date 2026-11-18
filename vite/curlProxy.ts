@@ -28,6 +28,17 @@ export async function proxyRequest(req: CurlRequest, fetchImpl: typeof fetch = f
 
 const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 
+/**
+ * Loopback alone isn't enough: any site open in the developer's browser is a loopback client.
+ * Requiring JSON forces a CORS preflight (which cross-origin pages fail), and Sec-Fetch-Site
+ * rejects cross-site requests outright where the browser sends it.
+ */
+export function isAllowedProxyRequest(headers: Record<string, string | string[] | undefined>): boolean {
+  const type = String(headers["content-type"] ?? "");
+  const site = headers["sec-fetch-site"];
+  return type.startsWith("application/json") && (site === undefined || site === "same-origin");
+}
+
 async function handle(req: IncomingMessage, res: ServerResponse, next: () => void) {
   if (req.url !== "/__proxy" || req.method !== "POST") return next();
   const send = (status: number, data: unknown) => {
@@ -36,6 +47,7 @@ async function handle(req: IncomingMessage, res: ServerResponse, next: () => voi
     res.end(JSON.stringify(data));
   };
   if (!LOOPBACK.has(req.socket.remoteAddress ?? "")) return send(403, { error: "Proxy only accepts requests from this machine" });
+  if (!isAllowedProxyRequest(req.headers)) return send(403, { error: "Proxy only accepts same-origin JSON requests from the tester" });
 
   try {
     const chunks: Buffer[] = [];
