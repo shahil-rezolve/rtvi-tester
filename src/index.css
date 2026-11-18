@@ -1,0 +1,121 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Palette tokens (spec): user = teal, bot = amber; status ok/warn/bad. */
+:root {
+  --surface: #f4f6f9;
+  --raised: #ffffff;
+  --line: #d9dfe7;
+  --text: #1c2430;
+  --text-dim: #5b6778;
+  --user: #1f8f87;
+  --bot: #b5761a;
+  --ok: #2f9e62;
+  --warn: #b38a12;
+  --bad: #cf3f48;
+
+  --background: var(--surface);
+  --foreground: var(--text);
+  --card: var(--raised);
+  --card-foreground: var(--text);
+  --popover: var(--raised);
+  --popover-foreground: var(--text);
+  --primary: #1c2430;
+  --primary-foreground: #f4f6f9;
+  --secondary: #e8ecf1;
+  --secondary-foreground: var(--text);
+  --muted: #e8ecf1;
+  --muted-foreground: var(--text-dim);
+  --accent: #e8ecf1;
+  --accent-foreground: var(--text);
+  --destructive: var(--bad);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--user);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --surface: #141b26;
+  --raised: #1b2433;
+  --line: #2a3547;
+  --text: #d7dee8;
+  --text-dim: #8794a8;
+  --user: #3fb8af;
+  --bot: #e9a23b;
+  --ok: #5cc98a;
+  --warn: #e8c14a;
+  --bad: #e5636b;
+
+  --primary: #d7dee8;
+  --primary-foreground: #141b26;
+  --secondary: #232e40;
+  --muted: #232e40;
+  --accent: #232e40;
+}
+
+@theme inline {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-dim: var(--text-dim);
+  --color-user: var(--user);
+  --color-bot: var(--bot);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 13px;
+  }
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
